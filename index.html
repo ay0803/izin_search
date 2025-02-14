@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI星座・性格・偉人サーチ</title>
+    <!-- 基本的なスタイル設定 -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+            background-color: #f5f5f5;
+        }
+        /* フレックスボックスでコンテナを中央寄せ */
+        .container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap; /* 追加: 横幅が狭くなったら折り返す */
+        }
+        /* チェッカーボックスのスタイル */
+        .checker {
+            width: 35%;
+            min-width: 300px; /* 追加: 最小幅を設定 */
+            border: 1px solid #ddd;
+            padding: 12px;
+            border-radius: 10px;
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px; /* 追加: 縦並びになった時の間隔 */
+        }
+        /* レスポンシブ対応 */
+        @media (max-width: 1024px) {
+            .checker {
+                width: 80%;
+                margin: 0 auto 20px;
+            }
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+        /* フォーム要素のスタイル */
+        select, button, textarea {
+            margin: 10px;
+            padding: 10px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        /* シリアル値のテキストを白色に */
+        .serial-value {
+            color: white;
+        }
+        /* 偉人アイコンギャラリー */
+        .icon-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin: 20px auto;
+            max-width: 900px;
+        }
+        .initial-icon {
+            width: 35px;
+            height: 35px;
+            margin: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            text-transform: uppercase;
+            transition: transform 0.3s;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            cursor: pointer;
+        }
+        .initial-icon:hover {
+            transform: scale(1.1);
+        }
+        /* 結果表示用の大きいアイコン */
+        .result-icon {
+            width: 120px;
+            height: 120px;
+            font-size: 48px;
+            margin: 20px auto;
+        }
+        /* 星座画像のスタイル */
+        .zodiac-icon {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 20px auto;
+            display: block;
+        }
+        /* 詳細情報セクションのスタイル */
+        .person-details {
+            margin: 20px auto;
+            padding: 30px;
+            max-width: 800px;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: left;
+        }
+        .detail-section {
+            margin: 20px 0;
+            padding: 20px;
+            border-left: 4px solid #4CAF50;
+            background-color: #f9f9f9;
+            border-radius: 0 8px 8px 0;
+            line-height: 1.6;
+        }
+        .detail-section h3 {
+            color: #2c3e50;
+            margin: 0 0 15px 0;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .detail-section div {
+            padding: 0 10px;
+        }
+        /* 偉人詳細のヘッダー部分 */
+        .person-header {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            margin-bottom: 35px;
+            padding-bottom: 25px;
+            border-bottom: 2px solid #eee;
+        }
+        .person-header-content {
+            flex: 1;
+        }
+        .person-header h2 {
+            margin: 0 0 20px 0;
+            color: #2c3e50;
+            font-size: 2em;
+            line-height: 1.4;
+        }
+        .person-image {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            border: 4px solid white;
+            flex-shrink: 0;
+        }
+        .person-icon-wrapper {
+            flex-shrink: 0;
+        }
+        .quote {
+            font-weight: bold;
+            font-style: italic;
+            color: #2c3e50;
+            margin: 20px 0;
+            padding: 25px;
+            line-height: 1.8;
+            letter-spacing: 0.03em;
+            font-size: 1.2em;
+        }
+        @media (max-width: 768px) {
+            .person-header {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+                gap: 20px;
+            }
+            .person-details {
+                margin: 20px 15px;
+                padding: 20px;
+            }
+            .detail-section {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="icon-gallery">
+        <!-- シリアル値0: 科学者グループ (青系) -->
+        <div class="initial-icon" style="background: linear-gradient(45deg, #2980b9, #3498db)" onclick="showPersonDetails('フレミング')">AF</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #3498db, #2980b9)" onclick="showPersonDetails('ミケランジェロ')">MB</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #2980b9, #3498db)" onclick="showPersonDetails('ジョン・F・ケネディ')">JFK</div>
+
+        <!-- シリアル値1: 音楽家グループ (緑系) -->
+        <div class="initial-icon" style="background: linear-gradient(45deg, #27ae60, #2ecc71)" onclick="showPersonDetails('伊能忠敬')">TI</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #2ecc71, #27ae60)" onclick="showPersonDetails('エジソン')">TE</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #27ae60, #2ecc71)" onclick="showPersonDetails('ノーベル')">AN</div>
+
+        <!-- シリアル値2: 芸術家グループ (紫系) -->
+        <div class="initial-icon" style="background: linear-gradient(45deg, #8e44ad, #9b59b6)" onclick="showPersonDetails('夏目漱石')">SN</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #9b59b6, #8e44ad)" onclick="showPersonDetails('ピカソ')">PP</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #8e44ad, #9b59b6)" onclick="showPersonDetails('フォード')">HF</div>
+
+        <!-- シリアル値3: 文学者グループ (赤系) -->
+        <div class="initial-icon" style="background: linear-gradient(45deg, #c0392b, #e74c3c)" onclick="showPersonDetails('ベル')">GB</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #e74c3c, #c0392b)" onclick="showPersonDetails('ナポレオン')">NV</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #c0392b, #e74c3c)" onclick="showPersonDetails('アインシュタイン')">AA</div>
+
+        <!-- シリアル値4: 指導者グループ (オレンジ系) -->
+        <div class="initial-icon" style="background: linear-gradient(45deg, #d35400, #e67e22)" onclick="showPersonDetails('司馬遼太郎')">RS</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #e67e22, #d35400)" onclick="showPersonDetails('豊臣秀吉')">HT</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #d35400, #e67e22)" onclick="showPersonDetails('ニュートン')">AN</div>
+
+        <!-- シリアル値5: 哲学者グループ (黄系) -->
+        <div class="initial-icon" style="background: linear-gradient(45deg, #f39c12, #f1c40f)" onclick="showPersonDetails('ゴルバチョフ')">G</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #f1c40f, #f39c12)" onclick="showPersonDetails('ジョブズ')">SJ</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #f39c12, #f1c40f)" onclick="showPersonDetails('ダーウィン')">CD</div>
+
+        <!-- シリアル値6: 発明家グループ (水色系) -->
+        <div class="initial-icon" style="background: linear-gradient(45deg, #16a085, #1abc9c)" onclick="showPersonDetails('グリム')">G</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #1abc9c, #16a085)" onclick="showPersonDetails('ニーチェ')">FN</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #16a085, #1abc9c)" onclick="showPersonDetails('アラン・チューリング')">AC</div>
+
+        <!-- シリアル値7: 女性グループ (ピンク系) -->
+        <div class="initial-icon" style="background: linear-gradient(45deg, #ff69b4, #ff1493)" onclick="showPersonDetails('モネ')">CM</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #ff1493, #ff69b4)" onclick="showPersonDetails('ガガーリン')">G</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #ff69b4, #ff1493)" onclick="showPersonDetails('ブルース・リー')">BT</div>
+
+        <!-- シリアル値8: 探検家・思想家グループ (茶系) -->
+        <div class="initial-icon" style="background: linear-gradient(45deg, #8b4513, #a0522d)" onclick="showPersonDetails('ジョンレノン')">JL</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #a0522d, #8b4513)" onclick="showPersonDetails('チャーチル')">WC</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #8b4513, #a0522d)" onclick="showPersonDetails('フロイト')">JF</div>
+
+        <!-- シリアル値9: 芸術家グループ2 (金系) -->
+        <div class="initial-icon" style="background: linear-gradient(45deg, #daa520, #ffd700)" onclick="showPersonDetails('ダンロップ')">D</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #ffd700, #daa520)" onclick="showPersonDetails('ガリレオ・ガリレイ')">GG</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #daa520, #ffd700)" onclick="showPersonDetails('渋沢栄一')">ES</div>
+
+        <!-- シリアル値10: 文学者グループ2 (灰系) -->
+        <div class="initial-icon" style="background: linear-gradient(45deg, #7f8c8d, #95a5a6)" onclick="showPersonDetails('バフェット')">WB</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #95a5a6, #7f8c8d)" onclick="showPersonDetails('ダヴィンチ')">LD</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #7f8c8d, #95a5a6)" onclick="showPersonDetails('シェイクスピア')">WS</div>
+
+        <!-- シリアル値11: エンターテイメントグループ (紺系) -->
+        <div class="initial-icon" style="background: linear-gradient(45deg, #2c3e50, #34495e)" onclick="showPersonDetails('マザー・テレサ')">MT</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #34495e, #2c3e50)" onclick="showPersonDetails('マリリン・モンロー')">MM</div>
+        <div class="initial-icon" style="background: linear-gradient(45deg, #2c3e50, #34495e)" onclick="showPersonDetails('リンドバーグ')">R</div>
+    </div>
+
+    <h1>AI星座・性格・偉人サーチ demo アルファ版</h1>
+    <p>誕生日と性格診断で、あなたのAI偉人をチェックしよう！</p>
+
+    <div class="container">
+        <!-- 星座チェッカーセクション -->
+        <div class="checker">
+            <h2>AI星座サーチ</h2>
+            <!-- 年選択 -->
+            <select id="year">
+                <script>
+                    // 現在年から過去100年分の選択肢を生成
+                    const currentYear = new Date().getFullYear();
+                    for (let i = currentYear - 100; i <= currentYear; i++) {
+                        document.write(`<option value="${i}">${i}年</option>`);
+                    }
+                </script>
+            </select>
+            <!-- 月選択 -->
+            <select id="month">
+                <script>
+                    // 1-12月の選択肢を生成
+                    for (let i = 1; i <= 12; i++) {
+                        document.write(`<option value="${i}">${i}月</option>`);
+                    }
+                </script>
+            </select>
+            <!-- 日選択 -->
+            <select id="day">
+                <script>
+                    // 1-31日の選択肢を生成
+                    for (let i = 1; i <= 31; i++) {
+                        document.write(`<option value="${i}">${i}日</option>`);
+                    }
+                </script>
+            </select>
+            <button onclick="showZodiac()">占う</button>
+            <div id="result"></div>
+        </div>
+
+        <!-- 性格診断チェッカーセクション -->
+        <div class="checker">
+            <h2>AI性格サーチ</h2>
+            <p>3つの質問に答えてください</p>
+            <!-- 性格診断質問1 -->
+            <label>Q1. 好きな活動は？</label>
+            <select id="q1">
+                <option value="0">考える</option>
+                <option value="1">行動する</option>
+                <option value="2">創造する</option>
+                <option value="3">助ける</option>
+            </select><br>
+
+            <!-- 性格診断質問2 -->
+            <label>Q2. 性格は？</label>
+            <select id="q2">
+                <option value="0">冷静</option>
+                <option value="1">情熱的</option>
+                <option value="2">慎重</option>
+                <option value="3">大胆</option>
+            </select><br>
+
+            <!-- 性格診断質問3 -->
+            <label>Q3. 目標は？</label>
+            <select id="q3">
+                <option value="0">成功</option>
+                <option value="1">自由</option>
+                <option value="2">革新</option>
+                <option value="3">調和</option>
+            </select><br>
+
+            <button onclick="showPersonality()">性格を診断</button>
+            <div id="personalityResult"></div>
+            <script>
+                function showPersonality() {
+                    const q1 = parseInt(document.getElementById("q1").value);
+                    const q2 = parseInt(document.getElementById("q2").value);
+                    const q3 = parseInt(document.getElementById("q3").value);
+                    
+                    // 4進数で計算して16種類の性格タイプを生成
+                    const personalityType = q1 * 16 + q2 * 4 + q3;
+                    
+                    // 2進数コードを生成（4桁）
+                    const binaryCode = (personalityType).toString(2).padStart(4, '0');
+                    
+                    // 性格タイプに応じたメッセージを表示
+                    const personalityTypes = [
+                        "論理的思考家", "自由な探究者", "革新的な発明家", "思いやりの調停者",
+                        "情熱的な実行者", "冒険的な開拓者", "創造的な芸術家", "献身的な支援者",
+                        "慎重な分析家", "独立した個人主義者", "先見的な戦略家", "平和な仲介者",
+                        "大胆な指導者", "自由奔放な冒険家", "革命的な改革者", "調和的な癒し手"
+                    ];
+                    
+                    document.getElementById("personalityResult").innerHTML = 
+                        `<p>あなたの性格タイプは「${personalityTypes[personalityType]}」です</p>` +
+                        `<p style="font-size: 1.2em">あなたの性格コードは「<span style="font-weight: bold; font-size: 1.4em">${binaryCode}</span>」です</p>`;
+                }
+            </script>
+        </div>
+
+        <!-- 偉人チェッカーセクション -->
+        <div class="checker">
+            <h2>AI偉人サーチ</h2>
+            <p>あなたの夢を教えてください</p>
+            <textarea id="q4" rows="3" cols="40" placeholder="夢を入力してください"></textarea><br>
+            <button onclick="showGreatPerson()">偉人を診断</button>
+            <div id="result2"></div>
+        </div>
+    </div>
+
+    <!-- 偉人詳細情報表示エリア -->
+    <div id="personDetails" class="person-details" style="display: none;">
+        <div class="person-header">
+            <div class="person-icon-wrapper">
+                <div class="initial-icon result-icon" id="personIcon"></div>
+            </div>
+            <div class="person-header-content">
+                <h2 id="personName"></h2>
+                <img id="personImage" class="person-image" src="" alt="">
+            </div>
+        </div>
+        <div class="quote" id="quote"></div>
+        <div class="detail-section">
+            <h3>性格</h3>
+            <div id="personality"></div>
+        </div>
+        <div class="detail-section">
+            <h3>仕事の特徴</h3>
+            <div id="work"></div>
+        </div>
+        <div class="detail-section">
+            <h3>財政・お金</h3>
+            <div id="finance"></div>
+        </div>
+        <div class="detail-section">
+            <h3>美容・健康</h3>
+            <div id="health"></div>
+        </div>
+        <div class="detail-section">
+            <h3>恋愛・結婚</h3>
+            <div id="love"></div>
+        </div>
+    </div>
+
+    <script>
+        // 現在の星座とシリアル値を保持するグローバル変数
+        let currentZodiac = null;
+        let currentSerial5 = null;
+
+        // 偉人データベース
+        const personInfo = {
+            'フレミング': {
+                quote: "偶然は準備された心にのみ微笑む。コツコツ取り組む研究者",
+                personality: '観察力が鋭く、偶然の発見を重要な発見に結びつける才能がある。好奇心旺盛。フレミングは、ペニシリンの細菌の研究者として有名ですが、真面目にコツコツ積み重ねるところがありました。悪くみれば控えめすぎるところや人に影響されやすいところがありますが、しっかり自分の正しい道を極める才能があるでしょう',
+                work: '研究開発や医療関連の仕事に向いています。細かいところに注意が向く性格なので、予期せぬ発見を活かせる職種が適しているでしょう。職場の規則にも従うので、指示どおりやマニュアルがあるタイプの仕事に向きます。計画どおりに行かないとイライラしてしまうこともありますが、それがあなたの魅力でもあります',
+                finance: '堅実な資産運用を好む。長期投資に関心を示しやすく、つい高価なブランドものなどを買いにいくことがあります。見栄を張りがちなところもありますが、ちゃんとお金の管理はできるので、自己破産の心配はありません。',
+                health: '衛生管理に気を配る傾向。規則正しい生活習慣を心がける。',
+                love: '誠実で思いやりのある関係を築ける。引っ張ってくれる人を好みます。玉の輿にのりやすいタイプです。ただし、自分の行動指針を相手に押し付けてしまうことがあり、そこが難しくなります。互いの成長を支え合えるパートナーと相性が良い。'
+            },
+            'ミケランジェロ': {
+                quote: "芸術は魂の言語である",
+                personality: '芸術的感性と完璧を追求する職人気質を持つ。情熱的で創造力豊か。',
+                work: '芸術や創作活動関連の仕事に向いている。細部にこだわる仕事で力を発揮。',
+                finance: '芸術的価値のある投資を好む。長期的な視点での資産形成が得意。',
+                health: '創作活動を通じてストレス解消。適度な運動で体調管理。',
+                love: '美的感覚を共有できるパートナーとの相性が良い。情熱的な関係を築ける。'
+            },
+            'ジョン・F・ケネディ': {
+                quote: "変化は人生の法則である",
+                personality: 'カリスマ性があり、リーダーシップに優れている。先見性と決断力を持つ。',
+                work: '政治や外交関連の仕事に向いている。組織のリーダーとして活躍できる。',
+                finance: '戦略的な投資判断ができる。社会的影響力のある投資を好む。',
+                health: 'ストレス管理が重要。適度な休養とスポーツで健康維持。',
+                love: '知的で社会的な活動を共にできるパートナーと良好な関係を築ける。'
+            },
+            '伊能忠敬': {
+                quote: "歩みを止めず、測り続けよ",
+                personality: '正確さを追求する几帳面な性格。探究心が強く、粘り強い努力家。',
+                work: '地理や測量関連の仕事に向いている。精密な作業を要する職種で活躍できる。',
+                finance: '計画的で慎重な資産運用を心がける。長期的な視点での投資が得意。',
+                health: '規則正しい生活習慣を保つことが健康の秘訣。適度な運動を心がける。',
+                love: '誠実で信頼関係を重視する恋愛観。着実に関係を築いていける相手と相性が良い。'
+            },
+            'エジソン': {
+                quote: "天才とは1%のひらめきと99%の努力である",
+                personality: '失敗を恐れない挑戦精神の持ち主。粘り強く目標に向かって努力できる。',
+                work: '発明や開発関連の仕事に向いている。問題解決能力が高い。',
+                finance: '新しいビジネスチャンスを見出す才能がある。投資には慎重な判断が必要。',
+                health: '仕事に没頭しすぎる傾向があるため、適度な休息が重要。',
+                love: '相手の夢や目標を応援できる関係を築ける。共に成長できるパートナーとの相性が良い。'
+            },
+            'ノーベル': {
+                quote: "平和のために科学を",
+                personality: '科学的探究心と人道的な精神を併せ持つ。平和と発展に貢献する意志が強い。',
+                work: '研究開発や国際協力の分野で活躍できる。社会貢献度の高い仕事に向いている。',
+                finance: '資産の社会還元を重視する。持続可能な投資を心がける。',
+                health: '研究活動の合間にリフレッシュする時間を確保することが重要。',
+                love: '知的で理想を共有できるパートナーとの相性が良い。平和的な関係を築ける。'
+            },
+            '夏目漱石': {
+                quote: "吾輩は猫である、名前はまだない",
+                personality: '繊細な感性と鋭い観察力を持つ。内省的で深い思考の持ち主。',
+                work: '文学や教育関連の仕事に適している。言語能力を活かせる職種が向いている。',
+                finance: '質素倹約を心がける傾向。文化的価値のある投資を好む。',
+                health: '精神的な安定を保つため、創作活動や読書の時間を大切にする。',
+                love: '精神的な成熟を重視する恋愛観。互いの個性を尊重し合える関係を築ける。'
+            },
+            'ピカソ': {
+                quote: "芸術は真実の嘘である",
+                personality: '革新的で独創的な芸術性を持つ。既存の概念に囚われない自由な発想の持ち主。',
+                work: '芸術関連の仕事に最適。創造的な表現力を活かせる職種で活躍できる。',
+                finance: '芸術的価値と経済的価値のバランスを重視。直感的な投資判断も。',
+                health: '創作活動を通じての精神的な解放が健康維持に重要。',
+                love: '情熱的で刺激的な恋愛を好む。芸術的感性を共有できる相手と相性が良い。'
+            },
+            'フォード': {
+                quote: "失敗とは、より賢明に再挑戦するチャンスである",
+                personality: '革新的な事業家精神を持つ。効率性と実用性を重視する実践的な性格。',
+                work: '製造業や経営者として活躍できる。システム化と効率化を得意とする。',
+                finance: '事業投資に積極的。効率的な資産運用を心がける。',
+                health: '仕事とプライベートのバランスを保つことが重要。定期的な運動を推奨。',
+                love: '実践的で現実的な恋愛観。互いの成長を支え合える関係を築ける。'
+            },
+            'ベル': {
+                quote: "扉が閉まれば、窓が開く",
+                personality: '発明家精神と探究心が旺盛。コミュニケーションの重要性を理解する。',
+                work: '通信技術や教育関連の仕事に向いている。革新的なアイデアを形にできる。',
+                finance: '技術開発への投資を重視。長期的な視点での資産運用を心がける。',
+                health: '精神的な充実を保つため、創造的な活動を継続することが重要。',
+                love: '相互理解とコミュニケーションを重視する恋愛観。思いやりのある関係を築ける。'
+            },
+            'ナポレオン': {
+                quote: "不可能とは、臆病者の言い訳である",
+                personality: '強い意志と決断力を持ち、カリスマ性のある性格。目標に向かって突き進む行動力が特徴。',
+                work: '戦略的思考に優れ、リーダーシップを発揮する仕事に向いている。組織のトップとして活躍できる素質あり。',
+                finance: '大胆な投資判断ができ、財を成す可能性が高い。ただし、過度な野心には注意が必要。',
+                health: '精神的なストレスを溜めやすいため、定期的な運動でストレス解消を。食事の管理も重要。',
+                love: '情熱的な恋愛を好み、パートナーにも高い理想を求める。相手の自主性を尊重することが良好な関係のカギ。'
+            },
+            'アインシュタイン': {
+                quote: "想像力は知識よりも重要である",
+                personality: '好奇心が旺盛で独創的な思考の持ち主。常識にとらわれない自由な発想が特徴。',
+                work: '研究職や創造的な仕事に向いている。独自の視点で問題解決ができる。',
+                finance: '金銭にはあまりこだわらない傾向。堅実な資産運用を心がけるべき。',
+                health: '考え事に没頭しがちなので、運動不足に注意。規則正しい生活リズムを保つことが重要。',
+                love: '知的な会話を楽しめるパートナーとの相性が良い。精神的な繋がりを重視する。'
+            },
+            '司馬遼太郎': {
+                quote: "歴史は人間の心の中にある",
+                personality: '歴史への深い洞察力と物語を紡ぐ才能を持つ。人間性を重視する。',
+                work: '執筆活動や歴史研究の分野で活躍できる。文化的な仕事に向いている。',
+                finance: '堅実な資産運用を好む。文化的価値のある投資に関心を示す。',
+                health: '読書や執筆を通じての精神的な充実が健康維持に重要。',
+                love: '歴史的な価値観を大切にする恋愛観。互いの文化的背景を理解し合える関係を築ける。'
+            },
+            '豊臣秀吉': {
+                quote: "人生は一期一会",
+                personality: '強い野心と実行力を持つ。人心掌握に長けた統率力がある。',
+                work: '経営者やリーダー的立場で活躍できる。組織運営の才能がある。',
+                finance: '積極的な投資判断ができる。リスクとリターンのバランスを重視。',
+                health: 'ストレス管理が重要。適度な休養と運動のバランスを保つ。',
+                love: '情熱的で支配的な恋愛観。パートナーの成長を支援できる関係を築ける。'
+            },
+            'ニュートン': {
+                quote: "私は巨人の肩の上に立っている",
+                personality: '論理的で緻密な性格。物事の本質を追求する探究心が強い。',
+                work: '科学的な分析力を活かせる職種が適している。粘り強く課題に取り組める。',
+                finance: '計画的な資産運用が得意。リスク管理能力が高い。',
+                health: 'ストレス解消法として自然との触れ合いが効果的。十分な睡眠を取ることが大切。',
+                love: '誠実で信頼関係を重視する恋愛を好む。時間をかけて絆を深められる相手と相性が良い。'
+            },
+            'ゴルバチョフ': {
+                quote: "改革なくして前進なし",
+                personality: '改革精神と平和主義的な思考を持つ。対話と協調を重視する。',
+                work: '外交官や政策立案者として活躍できる。組織の改革に向いている。',
+                finance: '安定志向の資産運用を好む。社会的責任投資に関心を示す。',
+                health: '精神的なストレス管理が重要。定期的な休養を取ることを推奨。',
+                love: '平等と相互理解を重視する恋愛観。対話を大切にする関係を築ける。'
+            },
+            'ジョブズ': {
+                quote: "Stay hungry, Stay foolish",
+                personality: '革新的なビジョンを持ち、直感力に優れている。完璧主義な一面も。',
+                work: '創造的なリーダーシップを発揮できる。プロダクトデザインや企画職が適している。',
+                finance: '大胆な投資判断ができる。ただし、リスク管理も忘れずに。',
+                health: 'ストレス管理が重要。瞑想やヨガなどでリラックスすることを推奨。',
+                love: '理想が高く、相手に多くを求める傾向がある。互いの価値観を共有できる関係が望ましい。'
+            },
+            'ダーウィン': {
+                quote: "生き残る種とは、最も強い種ではない。最も賢い種でもない。それは、変化に最もよく適応した種である",
+                personality: '観察力と分析力に優れた性格。粘り強く研究を続ける姿勢がある。',
+                work: '研究職や自然科学分野で活躍できる。新しい発見を追求する仕事に向いている。',
+                finance: '長期的な視点での投資判断。慎重な資産運用を心がける。',
+                health: '自然との触れ合いを大切にする。規則正しい生活が重要。',
+                love: '知的な刺激を重視する恋愛観。互いの成長を支え合える関係を築ける。'
+            },
+            
+            'グリム': {
+                quote: "物語は人生の鏡である",
+                personality: '想像力豊かで物語を紡ぎ出す才能がある。伝統と文化を大切にする。',
+                work: '創作活動や教育関連の仕事に向いている。文化の継承に関わる仕事で力を発揮。',
+                finance: '堅実な資産運用を好む。文化的価値のある投資に興味を示す。',
+                health: '創作活動でストレス解消。自然との触れ合いも効果的。',
+                love: '伝統的な価値観を大切にする恋愛観。誠実で思いやりのある関係を築ける。'
+            },
+            'ニーチェ': {
+                quote: "深淵を覗く時、深淵もまたこちらを覗いているのだ",
+                personality: '深い思索と哲学的な洞察力を持つ。独自の価値観を大切にする。',
+                work: '思想家や作家として活躍できる。独創的な表現力を活かせる職種が向いている。',
+                finance: '物質的な価値よりも精神的な充実を重視する。計画的な資産管理が必要。',
+                health: '精神的な健康を保つため、芸術や音楽での自己表現を推奨。',
+                love: '深い精神的な繋がりを求める。価値観を共有できるパートナーと良好な関係を築ける。'
+            },
+            'アラン・チューリング': {
+                quote: "時には新しい方向に進むために、すべての道を試してみる必要がある",
+                personality: '論理的思考に優れ、複雑な問題を解決する能力が高い。先見性のある発想の持ち主。',
+                work: '数学や情報科学関連の仕事に適性がある。革新的なプロジェクトをリードできる。',
+                finance: '合理的な投資判断ができる。新技術への投資に関心を示す。',
+                health: '精神的なバランスを保つため、規則正しい生活リズムが重要。',
+                love: '知的な会話を楽しめる相手を求める。互いの個性を認め合える関係が理想的。'
+            },
+            'モネ': {
+                quote: "光は、すべてを変える",
+                personality: '繊細な感性と自然を愛する心を持つ。印象派的な物の見方ができる。',
+                work: '芸術関連や環境保護の仕事に向いている。感性を活かせる職種が適している。',
+                finance: '芸術的価値への投資を好む。長期的な視点での資産形成を心がける。',
+                health: '自然との触れ合いが心身の健康に重要。創作活動でストレス解消。',
+                love: '感性豊かで情緒的な恋愛観。芸術的感性を共有できる相手と相性が良い。'
+            },
+            'ガガーリン': {
+                quote: "地球は青かった",
+                personality: '冒険心と開拓精神に富む。新しい挑戦を恐れない勇気がある。',
+                work: '宇宙関連や先端技術の分野で活躍できる。パイオニア精神を活かせる職種が向いている。',
+                finance: '革新的な技術への投資に積極的。リスクを恐れない投資姿勢。',
+                health: '身体的な健康管理が重要。定期的なトレーニングを推奨。',
+                love: '冒険的で刺激的な恋愛を好む。新しい経験を共有できる相手と相性が良い。'
+            },
+            'ブルース・リー': {
+                quote: "水のようになれ、友よ",
+                personality: '強い意志と自己規律を持つ。哲学的な思考と身体能力を併せ持つ。',
+                work: '格闘技指導や自己啓発の分野で活躍できる。身体と精神を活かせる職種が向いている。',
+                finance: '計画的な資産運用を心がける。自己投資を重視する傾向。',
+                health: '日々の鍛錬が重要。身体と精神のバランスを保つ。',
+                love: '強い意志と優しさを併せ持つ恋愛観。互いを高め合える関係を築ける。'
+            },
+            'ジョンレノン': {
+                quote: "平和を与えるチャンスを",
+                personality: '平和を愛する革新的な精神の持ち主。芸術的感性と社会的意識が高い。',
+                work: '音楽や芸術関連の仕事に向いている。社会変革を目指す活動も得意。',
+                finance: '芸術的価値と社会貢献を重視した投資を好む。',
+                health: '創作活動を通じての精神的な解放が重要。瞑想なども効果的。',
+                love: '自由で平和的な恋愛観。互いの個性を認め合える関係を築ける。'
+            },
+            'チャーチル': {
+                quote: "決して諦めるな。決して、決して、決して",
+                personality: '強いリーダーシップと決断力を持つ。危機管理能力に優れている。',
+                work: '政治家や経営者として活躍できる。危機的状況での判断力が高い。',
+                finance: '保守的な投資判断を好む。リスク管理を重視する。',
+                health: 'ストレス管理が重要。趣味の時間を確保することを推奨。',
+                love: '伝統的な価値観を持つ恋愛観。信頼関係を重視する関係を築ける。'
+            },
+            'フロイト': {
+                quote: "愛し、働くことは、成熟した人間の姿である",
+                personality: '人間の心理を深く理解する洞察力を持つ。観察力と分析力に優れている。',
+                work: '心理カウンセラーや医療関連の仕事に適している。人の心に寄り添える職種が向いている。',
+                finance: '安定志向で堅実な資産運用を好む。リスクは最小限に抑える傾向がある。',
+                health: '精神的な健康管理が特に重要。定期的なリフレッシュが必要。',
+                love: '深い心の繋がりを求める恋愛を好む。お互いを理解し合える関係を築ける。'
+            },
+            'ダンロップ': {
+                quote: "必要は発明の母である",
+                personality: '実用的な発明精神を持つ。問題解決能力に優れている。',
+                work: '製造業や研究開発の分野で活躍できる。実践的なアプローチが得意。',
+                finance: '実用的な価値のある投資を好む。堅実な資産運用を心がける。',
+                health: '適度な運動と休養のバランスを保つことが重要。',
+                love: '実践的で誠実な恋愛観。相互理解と協力関係を築ける。'
+            },
+            'ガリレオ・ガリレイ': {
+                quote: "それでも地球は回っている",
+                personality: '真理を追求する探究心が強く、既存の概念に囚われない革新的な思考の持ち主。',
+                work: '研究職や教育関連の仕事に向いている。新しい発見を追求できる環境が理想的。',
+                finance: '長期的な視点での投資判断ができる。堅実な資産運用を心がける。',
+                health: '精神的なストレスを軽減するため、趣味の時間を大切にすることが重要。',
+                love: '知的な刺激を与え合える関係を求める。互いの個性を尊重できるパートナーと相性が良い。'
+            },
+            '渋沢栄一': {
+                quote: "道徳と経済は、車の両輪である",
+                personality: '合理的な思考と道徳的な価値観を持つ。社会貢献意識が高い。',
+                work: '経営者や金融関連の仕事に向いている。倫理的なビジネス展開が得意。',
+                finance: '道徳的な価値観に基づいた投資を重視。長期的な資産形成を心がける。',
+                health: '規則正しい生活習慣を保つことが重要。精神修養も大切。',
+                love: '道徳的な価値観を重視する恋愛観。誠実で信頼できる関係を築ける。'
+            },
+            'バフェット': {
+                quote: "他人が貪欲な時に恐れ、他人が恐れている時に貪欲であれ",
+                personality: '冷静で分析的な性格。長期的な視点と忍耐力を持つ。',
+                work: '投資や金融関連の仕事に向いている。慎重な判断力を活かせる。',
+                finance: '価値投資を重視。長期保有の投資スタイルが特徴。',
+                health: '規則正しい生活習慣を保つことが重要。ストレス管理も大切。',
+                love: '堅実で信頼関係を重視する恋愛観。長期的な関係を築ける。'
+            },
+            'ダ・ヴィンチ': {
+                quote: "単純さは究極の洗練である",
+                personality: '好奇心旺盛で創造的。多才な能力を持ち、芸術的センスと科学的思考を併せ持つ。',
+                work: '創造的な仕事に向いており、新しいアイデアを生み出す能力に優れている。',
+                finance: '芸術的価値の分かる投資家として成功の可能性あり。長期的な視点での資産運用が得意。',
+                health: '知的好奇心を満たすことが精神衛生に重要。適度な休息とバランスの取れた生活を。',
+                love: '知的な刺激を求める恋愛を好む。相手の個性を理解し、尊重できる関係を築ける。'
+            },
+            'シェイクスピア': {
+                quote: "この世界はすべて舞台である",
+                personality: '豊かな想像力と洞察力を持つ。人間の本質を見抜く力に長けている。',
+                work: '創作活動や芸術分野で活躍できる。感情表現が豊かで説得力がある。',
+                finance: '芸術的価値への投資を好む。安定した収入源の確保が重要。',
+                health: '創作活動でのストレス解消が効果的。十分な休息を取ることが大切。',
+                love: '情熱的でロマンチックな恋愛観。感情豊かな表現で相手の心を掴める。'
+            },
+            'マザー・テレサ': {
+                quote: "愛の反対は憎しみではなく、無関心です",
+                personality: '慈悲深く献身的な性格。他者への奉仕精神が強い。',
+                work: '福祉や医療の分野で活躍できる。人々を助ける仕事に向いている。',
+                finance: '社会貢献を重視した資産運用。必要最小限の支出を心がける。',
+                health: '精神的な充実を保つため、奉仕活動を継続することが重要。',
+                love: '無条件の愛を実践する恋愛観。相手の幸せを第一に考える関係を築ける。'
+            },          
+            'マリリン・モンロー': {
+                quote: "完璧である必要はない。ただ、本物であれ",
+                personality: '魅力的で情熱的な性格。芸術的センスと表現力に優れている。',
+                work: '芸能や表現の仕事に向いている。人々を魅了する力がある。',
+                finance: '直感的な投資判断。リスクを恐れない積極的な運用スタイル。',
+                health: '美容と健康管理を重視。メンタルケアも大切にする。',
+                love: '情熱的で魅力的な恋愛観。自由な精神を持つ相手と相性が良い。'
+            },
+            'リンドバーグ': {
+                quote: "人生の価値は、その長さではなく、その使い方にある",
+                personality: '冒険心と先駆者精神を持つ。困難に立ち向かう勇気がある。',
+                work: '航空関連や先駆的な分野で活躍できる。新しい挑戦を恐れない。',
+                finance: '計画的なリスク管理。長期的な視点での投資判断ができる。',
+                health: '体力維持と精神力の向上が重要。規則正しい生活を心がける。',
+                love: '自立心を重視する恋愛観。互いの夢を応援し合える関係を築ける。'
+            },                       
+        };
+
+        // 偉人の詳細情報を表示する関数
+        function showPersonDetails(name) {
+            const details = document.getElementById('personDetails');
+            const person = personInfo[name] || {
+                quote: '準備中です。',
+                personality: '準備中です。',
+                work: '準備中です。',
+                finance: '準備中です。',
+                health: '準備中です。',
+                love: '準備中です。'
+            };
+
+            // ヘッダー部分の更新
+            document.getElementById('personName').textContent = name;
+            // icon-galleryのdivタグ内で定義されているイニシャルと背景色を取得
+            const iconElements = document.querySelectorAll('.initial-icon');
+            let initial = '';
+            let bgColor = '';
+            for (const icon of iconElements) {
+                if (icon.getAttribute('onclick').includes(name)) {
+                    initial = icon.textContent;
+                    bgColor = icon.style.background;
+                    break;
+                }
+            }
+            document.getElementById('personIcon').style.background = bgColor;
+            document.getElementById('personIcon').textContent = initial;
+            document.getElementById('personImage').src = `images/persons/${name}.jpg`; // 画像パスは適宜調整してください
+            document.getElementById('personImage').alt = name;
+
+            document.getElementById('quote').textContent = person.quote;
+            document.getElementById('personality').textContent = person.personality;
+            document.getElementById('work').textContent = person.work;
+            document.getElementById('finance').textContent = person.finance;
+            document.getElementById('health').textContent = person.health;
+            document.getElementById('love').textContent = person.love;
+
+            details.style.display = 'block';
+            details.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 誕生日から星座を判定する関数
+        function getZodiacSign(month, day) {
+            const dateCode = month * 100 + day;
+
+            // 星座の境界日とそれぞれの情報を定義
+            const zodiacTable = [
+                { cutoff: 120, sign: "山羊座", img: "capricorn.png" },
+                { cutoff: 220, sign: "水瓶座", img: "aquarius.png" },
+                { cutoff: 321, sign: "魚座", img: "pisces.png" },
+                { cutoff: 420, sign: "牡羊座", img: "aries.png" },
+                { cutoff: 522, sign: "牡牛座", img: "taurus.png" },
+                { cutoff: 622, sign: "双子座", img: "gemini.png" },
+                { cutoff: 724, sign: "蟹座", img: "cancer.png" },
+                { cutoff: 823, sign: "獅子座", img: "leo.png" },
+                { cutoff: 923, sign: "乙女座", img: "virgo.png" },
+                { cutoff: 1024, sign: "天秤座", img: "libra.png" },
+                { cutoff: 1122, sign: "蠍座", img: "scorpio.png" },
+                { cutoff: 1222, sign: "射手座", img: "sagittarius.png" },
+                { cutoff: 1231, sign: "山羊座", img: "capricorn.png" }
+            ];
+
+            // 日付コードと境界日を比較して星座を決定
+            for (let i = 0; i < zodiacTable.length; i++) {
+                if (dateCode <= zodiacTable[i].cutoff) {
+                    return zodiacTable[i];
+                }
+            }
+            return { sign: "不明", img: "unknown.png" };
+        }
+
+        // Excel形式のシリアル値を計算する関数
+        function getDateSerial(month, day, year) {
+            // 1900年1月1日からの経過日数を計算
+            const baseDate = new Date(1900, 0, 1);
+            const targetDate = new Date(year, month - 1, day);
+            const diffTime = Math.abs(targetDate.getTime() - baseDate.getTime());
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+            
+            // Excelのシリアル値に合わせて1を加算
+            return diffDays + 2;
+        }
+
+        // 星座診断結果を表示する関数
+        function showZodiac() {
+            const month = parseInt(document.getElementById("month").value);
+            const day = parseInt(document.getElementById("day").value);
+            const year = parseInt(document.getElementById("year").value);
+            const zodiac = getZodiacSign(month, day);
+
+            currentZodiac = zodiac.sign;
+
+            const serial1 = getDateSerial(month, day, year);
+            const serial2 = serial1 + 693593;
+            const serial3 = Math.floor((serial2+5) / 10);
+            const serial4 = ((serial3 % 6) + 1) % 6;
+            const serial5 = year % 2 === 0 ? serial4 + 6 : serial4;
+            
+            currentSerial5 = serial5;
+
+            document.getElementById("result").innerHTML = `
+                <h3>あなたの星座は ${zodiac.sign} です！</h3>
+                <img src="images/${zodiac.img}" alt="${zodiac.sign}" class="zodiac-icon">
+                <p class="serial-value">あなたの誕生日の第一シリアル値は ${serial1} です。</p>
+                <p class="serial-value">あなたの誕生日の第二シリアル値は ${serial2} です。</p>
+                <p class="serial-value">あなたの誕生日の第三シリアル値は ${serial3} です。</p>
+                <p class="serial-value">あなたの誕生日の第四シリアル値は ${serial4} です。</p>
+                <p class="serial-value">あなたの誕生日の第五シリアル値は ${serial5} です。</p>
+            `;
+        }
+
+        // 第五シリアル値と性格診断から偉人を選択する関数
+        function getGreatPerson(serial5, q1, q2, q3, q4) {
+            // 実際の誕生日に基づいて偉人を配置
+            const greatPersons = {
+                0: [{name: "フレミング", initial: "AF"}, {name: "ミケランジェロ", initial: "MB"}, {name: "ジョン・F・ケネディ", initial: "JFK"}], // 科学者グループ
+                1: [{name: "伊能忠敬", initial: "TI"}, {name: "エジソン", initial: "TE"}, {name: "ノーベル", initial: "AN"}], // 音楽家グループ
+                2: [{name: "夏目漱石", initial: "SN"}, {name: "ピカソ", initial: "PP"}, {name: "フォード", initial: "HF"}], // 芸術家グループ
+                3: [{name: "ベル", initial: "GB"}, {name: "ナポレオン", initial: "NV"}, {name: "アインシュタイン", initial: "AA"}], // 文学者グループ
+                4: [{name: "司馬遼太郎", initial: "RS"}, {name: "豊臣秀吉", initial: "HT"}, {name: "ニュートン", initial: "AN"}], // 指導者グループ
+                5: [{name: "ゴルバチョフ", initial: "G"}, {name: "ジョブズ", initial: "SJ"}, {name: "ダーウィン", initial: "CD"}], // 哲学者グループ
+                6: [{name: "グリム", initial: "G"}, {name: "ニーチェ", initial: "FN"}, {name: "アラン・チューリング", initial: "AC"}], // 発明家グループ
+                7: [{name: "モネ", initial: "CM"}, {name: "ガガーリン", initial: "G"}, {name: "ブルース・リー", initial: "BT"}], // 女性グループ
+                8: [{name: "ジョンレノン", initial: "JL"}, {name: "チャーチル", initial: "WC"}, {name: "フロイト", initial: "JF"}], // 探検家・思想家グループ
+                9: [{name: "ダンロップ", initial: "D"}, {name: "ガリレオ・ガリレイ", initial: "GG"}, {name: "渋沢栄一", initial: "ES"}], // 芸術家グループ2
+                10: [{name: "バフェット", initial: "WB"}, {name: "ダヴィンチ", initial: "LD"}, {name: "シェイクスピア", initial: "WS"}], // 文学者グループ2
+                11: [{name: "マザー・テレサ", initial: "MT"}, {name: "マリリン・モンロー", initial: "MM"}, {name: "リンドバーグ", initial: "R"}] // エンターテイメントグループ
+            };
+
+            // 性格診断の合計値に基づいて選択（Q4の文字数も考慮）
+            const q4Value = Math.min(Math.floor(q4.length / 10), 3);
+            const total = (q1 + q2 + q3 + q4Value) % 3;
+            
+            // 性格タイプに基づいて選択
+            if (q1 === 1 && q2 === 1) { // 冷静で考える型
+                return greatPersons[serial5][0];
+            } else if (q2 === 2) { // 情熱的なタイプ
+                return greatPersons[serial5][1];
+            } else { // バランス型
+                return greatPersons[serial5][2];
+            }
+        }
+
+        // 偉人診断結果を表示する関数
+        function showGreatPerson() {
+            if (currentSerial5 === null) {
+                alert("まずは星座をサーチします。誕生日を入力してください！");
+                return;
+            }
+
+            const q1 = parseInt(document.getElementById("q1").value);
+            const q2 = parseInt(document.getElementById("q2").value);
+            const q3 = parseInt(document.getElementById("q3").value);
+            const q4 = document.getElementById("q4").value;
+
+            const person = getGreatPerson(currentSerial5, q1, q2, q3, q4);
+
+            document.getElementById("result2").innerHTML = `
+                <h3>あなたのAI偉人は ${person.name} です！</h3>
+                <div class="initial-icon result-icon" onclick="showPersonDetails('${person.name}')">${person.initial}</div>
+                <p>アイコンをクリックすると詳細が表示されます</p>
+            `;
+        }
+    </script>
+</body>
+</html>
